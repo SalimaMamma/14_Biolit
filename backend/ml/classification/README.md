@@ -25,27 +25,12 @@ dans `classifier_meta.json`. L'inférence n'utilise que **onnxruntime + numpy + 
 ## Fichiers
 
 ```text
-classifier_bioclip.py      # prétraitement numpy + extracteurs BioCLIP-2 (ONNX / PyTorch)
+classifier_bioclip.py      # prétraitement numpy + extracteur BioCLIP-2 (ONNX)
 classifier_infer.py        # chargement du modèle, têtes ONNX, décision hiérarchique
 config.py                  # chemins, fichiers du modèle, hyper-paramètres
 pipeline_classification.py # orchestration appelée par le pipeline principal
-training/                  # reconstruction du dataset, export ONNX, entraînement, évaluation
-tests/                     # tests unitaires et de non-régression
+tests/                     # tests unitaires et d'intégration
 ```
-
-`training/` :
-
-| Script | Rôle |
-|---|---|
-| `build_dataset.py` | export Biolit → images téléchargées + taxonomie TAXREF |
-| `export_onnx.py` | export de l'encodeur BioCLIP-2 en ONNX (+ têtes, appelé par `train.py`) |
-| `extract_features.py` | vecteurs BioCLIP-2 du dataset ou des crops (cache) |
-| `data.py` | découpage train/val/test par sortie + purge des quasi-doublons |
-| `components.py` | prototypes, régression logistique, fusion, agrégation, températures |
-| `evaluation.py` | décision vectorisée, métriques, contraintes de non-régression, bootstrap |
-| `baseline_v2.py`, `mlp.py` | méthode v2 ré-entraînée : référence de non-régression |
-| `train.py` | entraînement complet, export, évaluation sur test |
-| `make_crops.py`, `eval_crops.py` | évaluation sur crops YOLO (conditions de production) |
 
 ## Fichiers du modèle (Hugging Face `DataForGood/biolit-species-identification`, dossier `classification/`)
 
@@ -59,26 +44,13 @@ tests/                     # tests unitaires et de non-régression
 
 ## Ré-entraînement
 
-```bash
-cd backend
-uv pip install onnx onnxscript                                   # export ONNX uniquement
-# export Biolit dans ml/classification/data/dataset_biolit/export_biolit.csv
-uv run python -m ml.classification.training.build_dataset        # images + TAXREF
-uv run python -m ml.classification.training.export_onnx          # encodeur (une seule fois)
-uv run python -m ml.classification.training.extract_features     # ~3 h CPU, avec cache
-uv run python -m ml.classification.training.train                # ~1 h
-uv run python -m ml.classification.training.make_crops --split test
-uv run python -m ml.classification.training.extract_features --dataset crops --name crops_fp32
-uv run python -m ml.classification.training.eval_crops
-RUN_ONNX_REGRESSION=1 uv run pytest ml/classification/tests -vv
-```
-
-Supprimer `data/dataset_biolit/split.parquet` pour refaire le découpage
-(par exemple après ajout de nouvelles photos).
+Le code d'entraînement (reconstruction du dataset, export ONNX, entraînement, évaluation,
+référence v2) n'est pas inclus ici pour alléger le module d'inférence. Il est conservé sur
+la branche `feat/ml-classification-training`.
 
 ## Tests
 
 ```bash
 uv run pytest ml/classification/tests                           # rapides (CI)
-RUN_ONNX_REGRESSION=1 uv run pytest ml/classification/tests -vv  # + intégration et performances
+RUN_ONNX_REGRESSION=1 uv run pytest ml/classification/tests -vv  # + intégration (modèle requis)
 ```

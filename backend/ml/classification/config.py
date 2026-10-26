@@ -22,20 +22,9 @@ FEATURE_DIM      = 768    # dimension de sortie de BioCLIP-2 (ViT-L/14)
 BATCH_SIZE       = 32     # batch d'extraction
 
 # ── ONNX Runtime ───────────────────────────────────────────────────────────────
-ONNX_OPSET   = 17
 ONNX_THREADS = int(os.getenv("CLASSIF_ONNX_THREADS", "0"))   # 0 = auto
 
-# ── Entraînement (training/) ───────────────────────────────────────────────────
-SEED              = 42
-DUPLICATE_COS     = 0.95  # photos val/test exclues si une quasi-jumelle est dans un split précédent
-WHITENING_DIM     = 256   # 768d → 256d (PCA whitening) pour les prototypes
-MIN_PROTO_IMAGES  = 3     # nb min. de photos d'entraînement pour qu'une espèce soit apprise
-PROTO_ALPHA       = 0.6   # prototype = α × moyenne visuelle + (1 − α) × texte BioCLIP-2
-LR_C_GRID         = [0.003, 0.01, 0.03, 0.1]   # régularisation de la régression logistique (CV)
-FUSION_WEIGHTS    = [0.25, 0.5, 0.75]          # poids de la régression logistique dans la fusion
-N_COMMON_SPECIES  = 50    # évaluation : « communes » = 50 espèces les plus photographiées
-
-# ── Fichiers du modèle (produits par training/, publiés sur Hugging Face) ─────
+# ── Fichiers du modèle (publiés sur Hugging Face) ─────
 ENCODER_ONNX_FILE = RESULTS_DIR / "bioclip2_visual.onnx"     # image → features 768d
 HEADS_ONNX_FILE   = RESULTS_DIR / "classifier_heads.onnx"    # features → probabilités par niveau
 META_FILE         = RESULTS_DIR / "classifier_meta.json"     # classes, taxonomie, seuils

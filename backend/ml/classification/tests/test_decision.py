@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from ml.classification.classifier_infer import decide
-from ml.classification.training.evaluation import decide_arrays, top1
 
 TAX = {
     "patella vulgata":  {"regne": "Animalia", "phylum": "Mollusca", "classe": "Gastropoda",
@@ -83,13 +82,3 @@ def test_output_contract():
                 "regne", "phylum", "classe", "ordre", "famille", "species_name"]:
         assert key in r
     assert len(r["all_scores"]["species_name"]) == 3
-
-
-def test_vectorized_decision_matches_runtime():
-    rng = np.random.default_rng(0)
-    rows = [probs(rng.dirichlet(np.ones(3) * 0.5)) for _ in range(200)]
-    batch = {k: np.stack([r[k] for r in rows]) for k in rows[0]}
-    lvl, lab = decide_arrays(top1(batch, META["classes"]), TH)
-    for r, lv, lb in zip(rows, lvl, lab):
-        d = decide(r, META, TH)
-        assert (d["best_level"], d["best_label"]) == (lv, lb)
